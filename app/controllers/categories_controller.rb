@@ -64,6 +64,28 @@ class CategoriesController < ApplicationController
     end
   end
 
+  # PATCH/PUT /api/categories/:id
+  def update
+    case params.require(:category).permit(:type)[:type]
+    when 'category'
+      category = Category.find(params[:id])
+      if category.update(category_params('category'))
+        render json: category, serializer: CategorySerializer, status: :ok
+      else
+        render json: category.errors, status: :unprocessable_entity
+      end
+    when 'subcategory'
+      subcategory = SubCategory.find(params[:id])
+      if subcategory.update(category_params('subcategory'))
+        render json: subcategory, serializer: SubCategorySerializer, status: :ok
+      else
+        render json: subcategory.errors, status: :unprocessable_entity
+      end
+    else
+      render json: { error: 'Invalid category type' }, status: :bad_request
+    end
+  end
+
   private
 
     def category_params(type)
