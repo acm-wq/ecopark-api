@@ -4,44 +4,154 @@ info:
   title: API V1
   version: v1
 paths:
-  "/users":
+  "/api/categories":
     get:
-      summary: List all users
+      summary: Returns categories and/or subcategories
       tags:
-      - Users
+      - Categories
+      parameters:
+      - name: category[type]
+        in: query
+        schema:
+          type: string
+          enum:
+          - all
+          - category
+          - subcategory
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
       responses:
         '200':
-          description: users found
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    email:
-                      type: string
-                      format: email
-                    password_digest:
-                      type: string
-                    created_at:
-                      type: string
-                      format: date-time
-                    updated_at:
-                      type: string
-                      format: date-time
-                  required:
-                  - id
-                  - email
-                  - password_digest
-                  - created_at
-                  - updated_at
+          description: categories or subcategories returned
+        '400':
+          description: invalid type
+    post:
+      summary: Creates a category or subcategory
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer token
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: category created
+        '422':
+          description: unprocessable entity
+        '400':
+          description: invalid type
+        '401':
+          description: unauthorized
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              - name
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - category
+                  - subcategory
+                name:
+                  type: string
+                category_id:
+                  type: integer
+                  nullable: true
+    put:
+      summary: "/api/categories/{id}"
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer token
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        description: Category or Subcategory ID
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: category updated
+        '422':
+          description: unprocessable entity
+        '400':
+          description: invalid type
+        '401':
+          description: unauthorized
         '404':
-          description: users not found
+          description: not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              - name
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - category
+                  - subcategory
+                name:
+                  type: string
+                category_id:
+                  type: integer
+                  nullable: true
+    delete:
+      summary: "/api/categories/{id}"
+      tags:
+      - Categories
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer token
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        description: Category or Subcategory ID
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: category deleted
+        '401':
+          description: unauthorized
+        '404':
+          description: not found
 servers:
-- url: https://{defaultHost}
+- url: http://{defaultHost}
   variables:
     defaultHost:
-      default: www.example.com
+      default: localhost:3000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
