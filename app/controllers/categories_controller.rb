@@ -1,28 +1,46 @@
 class CategoriesController < ApplicationController
+  include Pagy::Backend
+
   skip_before_action :authorized, only: [:index]
 
   # GET /api/categories
   def index
-    case params.require(:category).permit(:type)[:type]
+    type = params.require(:category).permit(:type)[:type]
+
+    case type
     when 'all'
-      categories = Category.all
-      subcategories = SubCategory.all
+      pagy_cat, categories = pagy(Category.all, page_param: :categories_page)
+      pagy_subcat, subcategories = pagy(SubCategory.all, page_param: :subcategories_page)
 
       render json: {
         categories: ActiveModelSerializers::SerializableResource.new(
-            categories, each_serializer: CategorySerializer
-          ),
+          categories, each_serializer: CategorySerializer
+        ),
+        categories_pagy: pagy_metadata(pagy_cat),
+
         subcategories: ActiveModelSerializers::SerializableResource.new(
-            subcategories,
-            each_serializer: SubCategorySerializer
-          )
+          subcategories, each_serializer: SubCategorySerializer
+        ),
+        subcategories_pagy: pagy_metadata(pagy_subcat)
       }, status: :ok
     when 'category'
-      @categories = Category.all
-      render json: @categories, each_serializer: CategorySerializer, status: :ok
+      pagy_obj, categories = pagy(Category.all)
+      render json: {
+        categories: ActiveModelSerializers::SerializableResource.new(
+          categories, each_serializer: CategorySerializer
+        ),
+        pagy: pagy_metadata(pagy_obj)
+      }, status: :ok
+
     when 'subcategory'
-      @categories = SubCategory.all
-      render json: @categories, each_serializer: SubCategorySerializer, status: :ok
+      pagy_obj, subcategories = pagy(SubCategory.all)
+      render json: {
+        subcategories: ActiveModelSerializers::SerializableResource.new(
+          subcategories, each_serializer: SubCategorySerializer
+        ),
+        pagy: pagy_metadata(pagy_obj)
+      }, status: :ok
+
     else
       render json: { error: 'Invalid category type' }, status: :bad_request
     end
