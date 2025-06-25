@@ -49,34 +49,26 @@ class CategoriesController < ApplicationController
 
   # POST /api/categories
   def create
-    case params.require(:category).permit(:type)[:type]
-    when 'category'
-      category = Category.new(category_params('category'))
-      if category.save
-        render json: category, serializer: CategorySerializer, status: :created
-      else
-        render json: category.errors, status: :unprocessable_entity
-      end
-    when 'subcategory'
-      subcategory = SubCategory.new(category_params('subcategory'))
-      if subcategory.save
-        render json: subcategory, serializer: SubCategorySerializer, status: :created
-      else
-        render json: subcategory.errors, status: :unprocessable_entity
-      end
+    type = params.require(:category).permit(:type)[:type]
+
+    unless %w[category subcategory].include?(type)
+      return render json: { error: 'Invalid category type' }, status: :bad_request
+    end
+
+    resource = (type == 'category' ? Category : SubCategory).new(category_params(type))
+
+    if resource.save
+      render json: resource, serializer: "#{type.camelize}Serializer".constantize, status: :created
     else
-      render json: { error: 'Invalid category type' }, status: :bad_request
+      render json: resource.errors, status: :unprocessable_entity
     end
   end
 
   private
 
     def category_params(type)
-      base_params = params.require(:category).permit(:name)
-      if type == 'subcategory'
-        base_params.merge(params.require(:category).permit(:category_id))
-      else
-        base_params
-      end
+      permitted = [:name]
+      permitted << :category_id if type == 'subcategory'
+      params.require(:category).permit(permitted)
     end
 end
