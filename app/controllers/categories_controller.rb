@@ -5,14 +5,24 @@ class CategoriesController < ApplicationController
   def index
     case params.require(:category).permit(:type)[:type]
     when 'all'
-      @categories = Category.all + SubCategory.all
-      render json: @categories, status: :ok
+      categories = Category.all
+      subcategories = SubCategory.all
+
+      render json: {
+        categories: ActiveModelSerializers::SerializableResource.new(
+            categories, each_serializer: CategorySerializer
+          ),
+        subcategories: ActiveModelSerializers::SerializableResource.new(
+            subcategories,
+            each_serializer: SubCategorySerializer
+          )
+      }, status: :ok
     when 'category'
       @categories = Category.all
-      render json: @categories, status: :ok
+      render json: @categories, each_serializer: CategorySerializer, status: :ok
     when 'subcategory'
       @categories = SubCategory.all
-      render json: @categories, status: :ok
+      render json: @categories, each_serializer: SubCategorySerializer, status: :ok
     else
       render json: { error: 'Invalid category type' }, status: :bad_request
     end
@@ -22,18 +32,18 @@ class CategoriesController < ApplicationController
   def create
     case params.require(:category).permit(:type)[:type]
     when 'category'
-      @category = Category.new(category_params('category'))
-      if @category.save
-        render json: @category, status: :created
+      category = Category.new(category_params('category'))
+      if category.save
+        render json: category, serializer: CategorySerializer, status: :created
       else
-        render json: @category.errors, status: :unprocessable_entity
+        render json: category.errors, status: :unprocessable_entity
       end
     when 'subcategory'
-      @subcategory = SubCategory.new(category_params('subcategory'))
-      if @subcategory.save
-        render json: @subcategory, status: :created
+      subcategory = SubCategory.new(category_params('subcategory'))
+      if subcategory.save
+        render json: subcategory, serializer: SubCategorySerializer, status: :created
       else
-        render json: @subcategory.errors, status: :unprocessable_entity
+        render json: subcategory.errors, status: :unprocessable_entity
       end
     else
       render json: { error: 'Invalid category type' }, status: :bad_request
