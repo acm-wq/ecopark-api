@@ -86,6 +86,28 @@ class CategoriesController < ApplicationController
     end
   end
 
+  # DELETE /api/categories/:id
+  def destroy
+    case params.require(:category).permit(:type)[:type]
+    when 'category'
+      category = Category.find(params[:id])
+      if category.destroy
+        render json: { message: 'Category deleted successfully' }, status: :ok
+      else
+        render json: { error: 'Failed to delete category' }, status: :unprocessable_entity
+      end
+    when 'subcategory'
+      subcategory = SubCategory.find(params[:id])
+      if subcategory.destroy
+        render json: { message: 'Subcategory deleted successfully' }, status: :ok
+      else
+        render json: { error: 'Failed to delete subcategory' }, status: :unprocessable_entity
+      end
+    else
+      render json: { error: 'Invalid category type' }, status: :bad_request
+    end
+  end
+
   private
 
     def category_params(type)
