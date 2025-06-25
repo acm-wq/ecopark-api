@@ -24,4 +24,5 @@ group :development, :test do
   gem 'rspec-rails', '~> 8.0.0'
   gem 'rswag', '~> 2.16'
   gem 'faker'
+  gem 'factory_bot_rails'
 end
