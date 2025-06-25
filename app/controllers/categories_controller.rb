@@ -1,112 +1,87 @@
 class CategoriesController < ApplicationController
   include Pagy::Backend
-
-  skip_before_action :authorized, only: [:index]
+  skip_before_action :authorized, only: [ :index ]
 
   VALID_TYPES = %w[category subcategory].freeze
+  RESOURCE_CLASSES = { 'category' => Category, 'subcategory' => SubCategory }.freeze
+  SERIALIZERS = { 'category' => CategorySerializer, 'subcategory' => SubCategorySerializer }.freeze
 
-  # GET /api/categories
+  before_action :set_type, only: [ :index, :create, :update, :destroy ]
+  before_action :validate_type, only: [ :create, :update, :destroy ]
+  before_action :set_resource, only: [ :update, :destroy ]
+
   def index
-    case params.require(:category).permit(:type)[:type]
+    case @type
     when 'all'
       pagy_cat, categories = pagy(Category.all, page_param: :categories_page)
       pagy_subcat, subcategories = pagy(SubCategory.all, page_param: :subcategories_page)
       render json: {
-        categories: ActiveModelSerializers::SerializableResource.new(
-          categories,
-          each_serializer: CategorySerializer
-        ),
+        categories: serialize(categories, CategorySerializer),
         categories_pagy: pagy_metadata(pagy_cat),
-        subcategories: ActiveModelSerializers::SerializableResource.new(
-          subcategories,
-          each_serializer: SubCategorySerializer
-        ),
+        subcategories: serialize(subcategories, SubCategorySerializer),
         subcategories_pagy: pagy_metadata(pagy_subcat)
       }, status: :ok
-    when 'category'
-      render json: pagy(Category.all).then { |pagy_obj, categories|
-        {
-          categories: ActiveModelSerializers::SerializableResource.new(
-            categories,
-            each_serializer: CategorySerializer
-          ),
-          pagy: pagy_metadata(pagy_obj)
-        }
-      }, status: :ok
-    when 'subcategory'
-      render json: pagy(SubCategory.all).then { |pagy_obj, subcategories|
-        {
-          subcategories: ActiveModelSerializers::SerializableResource.new(
-            subcategories, 
-            each_serializer: 
-            SubCategorySerializer
-          ),
-          pagy: pagy_metadata(pagy_obj)
-        }
+    when *VALID_TYPES
+      pagy_obj, records = pagy(RESOURCE_CLASSES[type].all)
+      render json: {
+        "#{type}s".to_sym => serialize(records, SERIALIZERS[type]),
+        pagy: pagy_metadata(pagy_obj)
       }, status: :ok
     else
-      return_type_error
+      render_type_error
     end
   end
 
-  # POST /api/categories
   def create
-    type = params.require(:category).permit(:type)[:type]
-
-    return return_type_error unless category_is_valid?
-
-    resource = (type == 'category' ? Category : SubCategory).new(category_params(type))
-
+    resource = RESOURCE_CLASSES[@type].new(category_params)
     if resource.save
-      render json: resource, serializer: "#{type.camelize}Serializer".constantize, status: :created
+      render json: resource, serializer: SERIALIZERS[@type], status: :created
     else
-      render json: resource.errors, status: :unprocessable_entity
+      render json: { error: resource.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  # PATCH/PUT /api/categories/:id
   def update
-    type = params.require(:category).permit(:type)[:type]
-
-    return return_type_error unless category_is_valid?
-
-    resource = (type == 'category' ? Category : SubCategory).find(params[:id])
-
-    if resource.update(category_params(type))
-      render json: resource, serializer: "#{type.camelize}Serializer".constantize, status: :ok
+    if @resource.update(category_params)
+      render json: @resource, serializer: SERIALIZERS[@type], status: :ok
     else
-      render json: resource.errors, status: :unprocessable_entity
+      render json: { error: @resource.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  # DELETE /api/categories/:id
   def destroy
-    type = params.require(:category).permit(:type)[:type]
-
-    return return_type_error unless category_is_valid?
-
-    resource = (type == 'category' ? Category : SubCategory).find(params[:id])
-
-    if resource.destroy
-      render json: { message: "#{type.capitalize} deleted successfully" }, status: :ok
+    if @resource.destroy
+      render json: { message: "#{@type.capitalize} deleted successfully" }, status: :ok
     else
-      render json: { error: "Failed to delete #{type}" }, status: :unprocessable_entity
+      render json: { error: "Failed to delete #{@type}" }, status: :unprocessable_entity
     end
   end
 
   private
 
-    def category_params(type)
+    def set_type
+      @type = params.require(:category).permit(:type)[:type]
+    end
+
+    def validate_type
+      render_type_error unless VALID_TYPES.include?(@type)
+    end
+
+    def set_resource
+      @resource = RESOURCE_CLASSES[@type].find(params[:id])
+    end
+
+    def category_params
       permitted = [ :name ]
-      permitted << :category_id if type == 'subcategory'
+      permitted << :category_id if @type == 'subcategory'
       params.require(:category).permit(permitted)
     end
 
-    def category_is_valid?
-      VALID_TYPES.include?(params.require(:category).permit(:type)[:type])
+    def serialize(records, type)
+      ActiveModelSerializers::SerializableResource.new(records, each_serializer: type)
     end
 
-    def return_type_error
+    def render_type_error
       render json: { error: 'Invalid category type' }, status: :bad_request
     end
 end
