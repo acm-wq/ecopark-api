@@ -18,6 +18,8 @@ gem 'bcrypt', '~> 3.1', '>= 3.1.20'
 gem 'jwt', '~> 3.1', '>= 3.1.1'
 gem 'rack-cors'
 
+gem 'ostruct'
+
 gem 'active_model_serializers'
 
 group :development, :test do
