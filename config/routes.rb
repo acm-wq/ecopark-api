@@ -2,9 +2,8 @@ Rails.application.routes.draw do
   scope '/api' do
     mount Rswag::Ui::Engine => '/docs'
     mount Rswag::Api::Engine => '/docs'
-    resources :users, only: [:index]
-    
-    post "/users", to: "users#create"
+    resources :users, only: [:index, :create]
+
     get "/me", to: "users#me"
     post "/auth/login", to: "auth#login"
   end
