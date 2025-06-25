@@ -20,6 +20,34 @@ class CategoriesController < ApplicationController
 
   # POST /api/categories
   def create
-    # pass
+    case params.require(:category).permit(:type)[:type]
+    when 'category'
+      @category = Category.new(category_params('category'))
+      if @category.save
+        render json: @category, status: :created
+      else
+        render json: @category.errors, status: :unprocessable_entity
+      end
+    when 'subcategory'
+      @subcategory = SubCategory.new(category_params('subcategory'))
+      if @subcategory.save
+        render json: @subcategory, status: :created
+      else
+        render json: @subcategory.errors, status: :unprocessable_entity
+      end
+    else
+      render json: { error: 'Invalid category type' }, status: :bad_request
+    end
   end
+
+  private
+
+    def category_params(type)
+      base_params = params.require(:category).permit(:name)
+      if type == 'subcategory'
+        base_params.merge(params.require(:category).permit(:category_id))
+      else
+        base_params
+      end
+    end
 end
