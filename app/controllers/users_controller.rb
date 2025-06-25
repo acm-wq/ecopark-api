@@ -4,6 +4,8 @@ class UsersController < ApplicationController
   def index
     @users = User.all
     render json: @users, status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Users not found' }, status: :not_found
   end
 
   def create 
