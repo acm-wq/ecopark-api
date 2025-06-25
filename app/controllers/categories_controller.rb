@@ -3,6 +3,8 @@ class CategoriesController < ApplicationController
 
   skip_before_action :authorized, only: [:index]
 
+  VALID_TYPES = %w[category subcategory].freeze
+
   # GET /api/categories
   def index
     case params.require(:category).permit(:type)[:type]
@@ -43,7 +45,7 @@ class CategoriesController < ApplicationController
         }
       }, status: :ok
     else
-      render json: { error: 'Invalid category type' }, status: :bad_request
+      return_type_error
     end
   end
 
@@ -51,9 +53,7 @@ class CategoriesController < ApplicationController
   def create
     type = params.require(:category).permit(:type)[:type]
 
-    unless %w[category subcategory].include?(type)
-      return render json: { error: 'Invalid category type' }, status: :bad_request
-    end
+    return return_type_error unless category_is_valid?
 
     resource = (type == 'category' ? Category : SubCategory).new(category_params(type))
 
@@ -66,53 +66,47 @@ class CategoriesController < ApplicationController
 
   # PATCH/PUT /api/categories/:id
   def update
-    case params.require(:category).permit(:type)[:type]
-    when 'category'
-      category = Category.find(params[:id])
-      if category.update(category_params('category'))
-        render json: category, serializer: CategorySerializer, status: :ok
-      else
-        render json: category.errors, status: :unprocessable_entity
-      end
-    when 'subcategory'
-      subcategory = SubCategory.find(params[:id])
-      if subcategory.update(category_params('subcategory'))
-        render json: subcategory, serializer: SubCategorySerializer, status: :ok
-      else
-        render json: subcategory.errors, status: :unprocessable_entity
-      end
+    type = params.require(:category).permit(:type)[:type]
+
+    return return_type_error unless category_is_valid?
+
+    resource = (type == 'category' ? Category : SubCategory).find(params[:id])
+
+    if resource.update(category_params(type))
+      render json: resource, serializer: "#{type.camelize}Serializer".constantize, status: :ok
     else
-      render json: { error: 'Invalid category type' }, status: :bad_request
+      render json: resource.errors, status: :unprocessable_entity
     end
   end
 
   # DELETE /api/categories/:id
   def destroy
-    case params.require(:category).permit(:type)[:type]
-    when 'category'
-      category = Category.find(params[:id])
-      if category.destroy
-        render json: { message: 'Category deleted successfully' }, status: :ok
-      else
-        render json: { error: 'Failed to delete category' }, status: :unprocessable_entity
-      end
-    when 'subcategory'
-      subcategory = SubCategory.find(params[:id])
-      if subcategory.destroy
-        render json: { message: 'Subcategory deleted successfully' }, status: :ok
-      else
-        render json: { error: 'Failed to delete subcategory' }, status: :unprocessable_entity
-      end
+    type = params.require(:category).permit(:type)[:type]
+
+    return return_type_error unless category_is_valid?
+
+    resource = (type == 'category' ? Category : SubCategory).find(params[:id])
+
+    if resource.destroy
+      render json: { message: "#{type.capitalize} deleted successfully" }, status: :ok
     else
-      render json: { error: 'Invalid category type' }, status: :bad_request
+      render json: { error: "Failed to delete #{type}" }, status: :unprocessable_entity
     end
   end
 
   private
 
     def category_params(type)
-      permitted = [:name]
+      permitted = [ :name ]
       permitted << :category_id if type == 'subcategory'
       params.require(:category).permit(permitted)
+    end
+
+    def category_is_valid?
+      VALID_TYPES.include?(params.require(:category).permit(:type)[:type])
+    end
+
+    def return_type_error
+      render json: { error: 'Invalid category type' }, status: :bad_request
     end
 end
