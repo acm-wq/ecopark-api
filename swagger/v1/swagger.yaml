@@ -10,19 +10,19 @@ paths:
       tags:
       - Categories
       parameters:
-      - name: category
+      - name: category[type]
         in: query
         schema:
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-              - all
-              - category
-              - subcategory
-          required:
-          - type
+          type: string
+          enum:
+          - all
+          - category
+          - subcategory
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
       responses:
         '200':
           description: categories or subcategories returned
