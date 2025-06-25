@@ -22,16 +22,16 @@ class CategoriesController < ApplicationController
         subcategories_pagy: pagy_metadata(pagy_subcat)
       }, status: :ok
     when *VALID_TYPES
-      pagy_obj, records = pagy(RESOURCE_CLASSES[type].all)
+      pagy_obj, records = pagy(RESOURCE_CLASSES[@type].all)
       render json: {
-        "#{type}s".to_sym => serialize(records, SERIALIZERS[type]),
+        "#{@type}s".to_sym => serialize(records, SERIALIZERS[@type]),
         pagy: pagy_metadata(pagy_obj)
       }, status: :ok
     else
       render_type_error
     end
   end
-
+  
   def create
     resource = RESOURCE_CLASSES[@type].new(category_params)
     if resource.save
