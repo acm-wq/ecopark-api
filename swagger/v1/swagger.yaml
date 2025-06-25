@@ -4,44 +4,32 @@ info:
   title: API V1
   version: v1
 paths:
-  "/users":
+  "/api/categories":
     get:
-      summary: List all users
+      summary: Returns categories and/or subcategories
       tags:
-      - Users
+      - Categories
+      parameters:
+      - name: category
+        in: query
+        schema:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - all
+              - category
+              - subcategory
+          required:
+          - type
       responses:
         '200':
-          description: users found
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    email:
-                      type: string
-                      format: email
-                    password_digest:
-                      type: string
-                    created_at:
-                      type: string
-                      format: date-time
-                    updated_at:
-                      type: string
-                      format: date-time
-                  required:
-                  - id
-                  - email
-                  - password_digest
-                  - created_at
-                  - updated_at
-        '404':
-          description: users not found
+          description: categories or subcategories returned
+        '400':
+          description: invalid type
 servers:
-- url: https://{defaultHost}
+- url: http://{defaultHost}
   variables:
     defaultHost:
-      default: www.example.com
+      default: localhost:3000
