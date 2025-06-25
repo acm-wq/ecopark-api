@@ -1,7 +1,8 @@
 FactoryBot.define do
   factory :user do
     email { Faker::Internet.email }
-    password_digest { BCrypt::Password.create('password') }
+    password { "password" }
+    password_confirmation { "password" }
     created_at { Time.now }
     updated_at { Time.now }
   end
