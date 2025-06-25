@@ -19,7 +19,7 @@ gem 'bcrypt', '~> 3.1', '>= 3.1.20'
 gem 'jwt', '~> 3.1', '>= 3.1.1'
 gem 'rack-cors'
 
-gem 'kaminari', '~> 1.2', '>= 1.2.2'
+gem 'pagy', '~> 9.3', '>= 9.3.4'
 
 gem 'active_model_serializers'
 
