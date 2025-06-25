@@ -1,5 +1,6 @@
 source "https://rubygems.org"
 
+gem 'ostruct'
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.2"
 # Use postgresql as the database for Active Record
@@ -18,7 +19,7 @@ gem 'bcrypt', '~> 3.1', '>= 3.1.20'
 gem 'jwt', '~> 3.1', '>= 3.1.1'
 gem 'rack-cors'
 
-gem 'ostruct'
+gem 'kaminari', '~> 1.2', '>= 1.2.2'
 
 gem 'active_model_serializers'
 
