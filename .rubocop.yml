@@ -1,0 +1,21 @@
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  Exclude:
+    - "db/schema.rb"
+    - "db/migrate/**/*"
+    - "db/seeds.rb"
+    - "config/**/*"
+    - "node_modules/**/*"
+    - "bin/*"
+    - "Gemfile.lock"
+    - "Gemfile"
+    - "config.ru"
+    - "Rakefile"
+    - "vendor/**/*"
+
+Layout/LineLength:
+  Max: 80
+
+Style/Documentation:
+  Enabled: false
