@@ -8,7 +8,7 @@ Rails.application.routes.draw do
     post "/auth/login", to: "auth#login"
 
     resources :categories, only: [ :index, :create, :update, :destroy ]
-    resources :landmarks, only: [ :create ]
+    resources :landmarks, only: [ :index, :create ]
   end
 
   get "up" => "rails/health#show", as: :rails_health_check
