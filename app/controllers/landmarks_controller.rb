@@ -14,6 +14,7 @@ class LandmarksController < ApplicationController
   def landmark_params
     params.require(:landmark).permit(
       :name,
+      :description,
       images: []
     )
   end
